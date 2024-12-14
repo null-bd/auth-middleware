@@ -1,0 +1,46 @@
+# Go binary executables
+/bin/
+/obj/
+
+/# Go workspace files
+/.vscode/
+/.idea/
+/*.vscode*
+
+# Dependency directories
+/vendor/
+/Godeps/
+
+# Go build output files
+*.exe
+*.test
+*.out
+
+# Go coverage files
+*.cov
+*.coverage
+*.out
+
+# Go test binary
+*.test
+
+# Golang IDEs and editor-specific files
+# IntelliJ IDEA
+.idea/
+
+# VSCode settings
+.vscode/
+
+# GoLand settings
+.idea/
+
+# Build cache
+*.log
+*.pid
+
+# Go specific logs
+go.sum
+
+# OS-specific files
+.DS_Store
+Thumbs.db
