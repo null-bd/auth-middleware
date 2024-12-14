@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/null-bd/auth-middleware/pkg/keycloak"
-	"github.com/null-bd/auth-middleware/pkg/permissions"
+	"github.com/null-bd/authn/pkg/keycloak"
+	"github.com/null-bd/authn/pkg/permissions"
 
 	"github.com/gin-gonic/gin"
 )

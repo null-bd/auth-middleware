@@ -1,4 +1,4 @@
-module github.com/null-bd/auth-middleware
+module github.com/null-bd/authn
 
 go 1.21.0
 

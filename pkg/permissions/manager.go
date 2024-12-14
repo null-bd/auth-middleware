@@ -4,7 +4,7 @@ package permissions
 import (
 	"strings"
 
-	"github.com/null-bd/auth-middleware/pkg/keycloak"
+	"github.com/null-bd/authn/pkg/keycloak"
 )
 
 type RolePermissionCallback func(orgId string, branchId string, role string) []string

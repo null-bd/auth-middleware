@@ -16,7 +16,7 @@ A flexible, Keycloak-based authentication middleware for Go microservices using 
 ## Installation
 
 ```bash
-go get github.com/null-bd/auth-middleware
+go get github.com/null-bd/authn
 ```
 
 ## Quick Start
@@ -46,7 +46,7 @@ package main
 
 import (
     "github.com/gin-gonic/gin"
-    "github.com/null-bd/auth-middleware/pkg/authmiddleware"
+    "github.com/null-bd/authn/pkg/authmiddleware"
 )
 
 func main() {
