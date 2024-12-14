@@ -6,7 +6,7 @@ import (
 	"github.com/null-bd/authn/pkg/permissions"
 )
 
-// Re-export types from auth package
+// From auth package
 type (
 	ConfigLoader    = auth.ConfigLoader
 	ServiceConfig   = auth.ServiceConfig
@@ -14,19 +14,19 @@ type (
 	ResourceMatcher = auth.ResourceMatcher
 )
 
-// Re-export functions from auth package
+// From auth package
 var (
 	NewConfigLoader    = auth.NewConfigLoader
 	NewAuthMiddleware  = auth.NewAuthMiddleware
 	NewResourceMatcher = auth.NewResourceMatcher
 )
 
-// Re-export types from keycloak package
+// From keycloak package
 type (
 	TokenClaims = keycloak.TokenClaims
 )
 
-// Re-export types from permissions package
+// From permissions package
 type (
 	RolePermissionCallback = permissions.RolePermissionCallback
 )
