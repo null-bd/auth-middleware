@@ -1,4 +1,4 @@
-package middleware
+package auth
 
 type ResourcePermission struct {
 	Method    string   `json:"method"`
