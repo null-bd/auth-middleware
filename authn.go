@@ -8,10 +8,12 @@ import (
 
 // From auth package
 type (
-	ConfigLoader    = auth.ConfigLoader
-	ServiceConfig   = auth.ServiceConfig
-	AuthMiddleware  = auth.AuthMiddleware
-	ResourceMatcher = auth.ResourceMatcher
+	ConfigLoader       = auth.ConfigLoader
+	ServiceConfig      = auth.ServiceConfig
+	ResourcePermission = auth.ResourcePermission
+	PublicPath         = auth.PublicPath
+	AuthMiddleware     = auth.AuthMiddleware
+	ResourceMatcher    = auth.ResourceMatcher
 )
 
 // From auth package

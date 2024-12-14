@@ -1,13 +1,5 @@
 package auth
 
-type ResourcePermission struct {
-	Method    string   `json:"method"`
-	Path      string   `json:"path"`
-	Roles     []string `json:"roles"`
-	Actions   []string `json:"actions"`
-	ServiceID string   `json:"serviceId"`
-}
-
 type ServiceConfig struct {
 	ServiceID    string               `json:"serviceId"`
 	ClientID     string               `json:"clientId"`
@@ -17,4 +9,23 @@ type ServiceConfig struct {
 	Resources    []ResourcePermission `json:"resources"`
 	CacheEnabled bool                 `json:"cacheEnabled"`
 	CacheURL     string               `json:"cacheUrl"`
+	PublicPaths  []PublicPath         `json:"publicPaths"`
+}
+
+type ResourcePermission struct {
+	Path      string   `json:"path"`
+	Method    string   `json:"method"`
+	Roles     []string `json:"roles"`
+	Actions   []string `json:"actions"`
+	ServiceID string   `json:"serviceId"`
+}
+
+type PublicPath struct {
+	Path   string   `json:"path"`
+	Method []string `json:"methods"` // HTTP methods to bypass auth (GET, POST, etc)
+}
+
+type pathKey struct {
+	path   string
+	method string
 }

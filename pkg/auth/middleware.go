@@ -15,6 +15,7 @@ type AuthMiddleware struct {
 	config       ServiceConfig
 	tokenManager *keycloak.TokenManager
 	permManager  *permissions.Manager
+	publicPaths  map[pathKey]bool
 }
 
 func NewAuthMiddleware(config ServiceConfig, permCallback permissions.RolePermissionCallback) (*AuthMiddleware, error) {
@@ -27,15 +28,33 @@ func NewAuthMiddleware(config ServiceConfig, permCallback permissions.RolePermis
 		return nil, err
 	}
 
+	publicPaths := make(map[pathKey]bool)
+	for _, pp := range config.PublicPaths {
+		for _, method := range pp.Method {
+			key := pathKey{
+				path:   pp.Path,
+				method: strings.ToUpper(method),
+			}
+			publicPaths[key] = true
+		}
+	}
+
 	return &AuthMiddleware{
 		config:       config,
 		tokenManager: tm,
 		permManager:  permissions.NewManager(permCallback),
+		publicPaths:  publicPaths,
 	}, nil
 }
 
 func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		// Check if the path is public
+		if am.isPublicPath(c.Request.Method, c.Request.URL.Path) {
+			c.Next()
+			return
+		}
+
 		token := extractToken(c)
 		if token == "" {
 			handleError(c, ErrMissingToken)
@@ -56,6 +75,42 @@ func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 		c.Set("claims", claims)
 		c.Next()
 	}
+}
+
+func (am *AuthMiddleware) isPublicPath(method, path string) bool {
+	key := pathKey{
+		path:   path,
+		method: strings.ToUpper(method),
+	}
+
+	// First try exact match
+	if am.publicPaths[key] {
+		return true
+	}
+
+	// Then try wildcard paths
+	for configPath := range am.publicPaths {
+		if configPath.method == key.method && isWildcardMatch(configPath.path, path) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// isWildcardMatch checks if a path matches a pattern that might include wildcards
+// Example: "/api/v1/*" matches "/api/v1/anything"
+func isWildcardMatch(pattern, path string) bool {
+	if !strings.Contains(pattern, "*") {
+		return pattern == path
+	}
+
+	if strings.HasSuffix(pattern, "/*") {
+		basePattern := strings.TrimSuffix(pattern, "/*")
+		return strings.HasPrefix(path, basePattern)
+	}
+
+	return false
 }
 
 func validateConfig(config ServiceConfig) error {
