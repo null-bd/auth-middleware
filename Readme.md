@@ -54,6 +54,7 @@ package main
 import (
     "github.com/gin-gonic/gin"
     "github.com/null-bd/authn/pkg/authmiddleware"
+    "github.com/null-bd/logger"
 )
 
 func main() {
@@ -65,7 +66,7 @@ func main() {
     }
 
     // Initialize middleware
-    authMiddleware, err := authmiddleware.NewAuthMiddleware(*config, nil)
+    authMiddleware, err := authmiddleware.NewAuthMiddleware(logger.Logger, *config, nil)
     if err != nil {
         log.Fatal(err)
     }
