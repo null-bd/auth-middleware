@@ -1,30 +1,40 @@
 package auth
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strings"
 
+	"github.com/gin-gonic/gin"
 	"github.com/null-bd/authn/pkg/keycloak"
 	"github.com/null-bd/authn/pkg/permissions"
-
-	"github.com/gin-gonic/gin"
+	"github.com/null-bd/logger"
 )
 
 type AuthMiddleware struct {
+	log          logger.Logger
 	config       ServiceConfig
 	tokenManager *keycloak.TokenManager
 	permManager  *permissions.Manager
 	publicPaths  map[pathKey]bool
 }
 
-func NewAuthMiddleware(config ServiceConfig, permCallback permissions.RolePermissionCallback) (*AuthMiddleware, error) {
+func NewAuthMiddleware(log logger.Logger, config ServiceConfig, permCallback permissions.RolePermissionCallback) (*AuthMiddleware, error) {
 	if err := validateConfig(config); err != nil {
+		log.Error(context.Background(), "Failed to validate config", logger.Fields{"error": err.Error()})
 		return nil, err
 	}
 
+	log.Info(context.Background(), "Initializing token manager", logger.Fields{
+		"keycloak_url":  config.KeycloakURL,
+		"realm":         config.Realm,
+		"cache_enabled": config.CacheEnabled,
+	})
+
 	tm, err := keycloak.NewTokenManager(config.KeycloakURL, config.Realm, config.CacheEnabled, config.CacheURL)
 	if err != nil {
+		log.Error(context.Background(), "Failed to create token manager", logger.Fields{"error": err.Error()})
 		return nil, err
 	}
 
@@ -39,7 +49,13 @@ func NewAuthMiddleware(config ServiceConfig, permCallback permissions.RolePermis
 		}
 	}
 
+	log.Info(context.Background(), "Auth middleware initialized successfully", logger.Fields{
+		"service_id":         config.ServiceID,
+		"public_paths_count": len(publicPaths),
+	})
+
 	return &AuthMiddleware{
+		log:          log,
 		config:       config,
 		tokenManager: tm,
 		permManager:  permissions.NewManager(permCallback),
@@ -49,28 +65,57 @@ func NewAuthMiddleware(config ServiceConfig, permCallback permissions.RolePermis
 
 func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		requestFields := logger.Fields{
+			"method": c.Request.Method,
+			"path":   c.Request.URL.Path,
+		}
+
 		// Check if the path is public
 		if am.isPublicPath(c.Request.Method, c.Request.URL.Path) {
+			am.log.Debug(c.Request.Context(), "Accessing public path", requestFields)
 			c.Next()
 			return
 		}
 
 		token := extractToken(c)
 		if token == "" {
+			am.log.Warn(c.Request.Context(), "Missing authentication token", requestFields)
 			handleError(c, ErrMissingToken)
 			return
 		}
 
 		claims, err := am.tokenManager.ValidateToken(c.Request.Context(), token)
 		if err != nil {
+			am.log.Error(c.Request.Context(), "Token validation failed", logger.Fields{
+				"error":  err.Error(),
+				"method": c.Request.Method,
+				"path":   c.Request.URL.Path,
+			})
 			handleError(c, err)
 			return
 		}
 
+		am.log.Debug(c.Request.Context(), "Token validated successfully", logger.Fields{
+			"method":    c.Request.Method,
+			"path":      c.Request.URL.Path,
+			"branch_id": claims.BranchID,
+		})
+
 		if !am.permManager.HasPermission(c.Request.Method, c.Request.URL.Path, claims) {
+			am.log.Warn(c.Request.Context(), "Insufficient permissions", logger.Fields{
+				"method":    c.Request.Method,
+				"path":      c.Request.URL.Path,
+				"branch_id": claims.BranchID,
+			})
 			handleError(c, ErrInsufficientScope)
 			return
 		}
+
+		am.log.Info(c.Request.Context(), "Authentication successful", logger.Fields{
+			"method":    c.Request.Method,
+			"path":      c.Request.URL.Path,
+			"branch_id": claims.BranchID,
+		})
 
 		c.Set("claims", claims)
 		c.Next()
