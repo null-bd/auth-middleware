@@ -37,6 +37,13 @@ auth:
       method: "GET"
       roles: ["admin", "user"]
       actions: ["read:users"]
+  publicPaths:
+    - path: "/health"
+      methods: ["GET"]
+    - path: "/api/v1/public/*"
+      methods: ["GET", "POST"]
+    - path: "/metrics"
+      methods: ["GET"]
 ```
 
 2. Initialize the middleware in your service:
