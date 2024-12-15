@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/null-bd/authn/pkg/keycloak"
 	"github.com/null-bd/authn/pkg/permissions"
 	"github.com/null-bd/logger"
@@ -61,6 +62,31 @@ func NewAuthMiddleware(log logger.Logger, config ServiceConfig, permCallback per
 		permManager:  permissions.NewManager(permCallback),
 		publicPaths:  publicPaths,
 	}, nil
+}
+
+func (am *AuthMiddleware) TraceMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// Get or generate trace IDs
+		requestID := c.GetHeader("x-nbd-request-id")
+		if requestID == "" {
+			requestID = uuid.New().String()
+		}
+		traceID := c.GetHeader("x-nbd-trace-ID")
+		if traceID == "" {
+			traceID = uuid.New().String()
+		}
+
+		// Set trace fields in logger's global context
+		logger.SetTraceFields(logger.Fields{
+			"request_id": requestID,
+			"trace_id":   traceID,
+		})
+
+		c.Next()
+
+		// Clear trace fields after request is done
+		defer logger.ClearTraceFields()
+	}
 }
 
 func (am *AuthMiddleware) Authenticate() gin.HandlerFunc {
